@@ -4,11 +4,13 @@ from users.models import User
 
 class Product(models.Model):
     name             = models.CharField(max_length=64)
-    price            = models.IntegerField()
+    price            = models.DecimalField(max_digits=10, decimal_places=3)
     discount_percent = models.DecimalField(max_digits=5, decimal_places=3,blank=True)
     is_new           = models.BooleanField(default=False)
     category         = models.ForeignKey('category', on_delete=models.SET_NULL,null=True)
     like             = models.ManyToManyField(User,through='Userproductlike',related_name='products')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'products'
@@ -26,7 +28,7 @@ class Image(models.Model):
     class Meta:
         db_table = 'images'
 
-class Userproductlike(models.Model):
+class UserProductLike(models.Model):
     user    = models.ForeignKey(User,on_delete=models.CASCADE)
     product = models.ForeignKey('product',on_delete=models.CASCADE)
 

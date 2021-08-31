@@ -7,6 +7,8 @@ class Order(models.Model):
     user     = models.ForeignKey(User, on_delete=models.CASCADE)
     status   = models.ForeignKey('OrderStatus', on_delete=models.SET_NULL, null=True)
     datetime = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         db_table = 'orders'
@@ -28,11 +30,8 @@ class OrderItem(models.Model):
     product  = models.ForeignKey(Product, on_delete=models.CASCADE)
     status   = models.ForeignKey(OrderItemStatus, on_delete=models.CASCADE)
     quantity = models.IntegerField()
-    price    = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'orderitems'
-
-
-
-

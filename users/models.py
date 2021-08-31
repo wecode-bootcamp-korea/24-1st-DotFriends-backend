@@ -6,6 +6,7 @@ class User(models.Model):
     password     = models.CharField(max_length=512)
     phone_number = models.CharField(max_length=16)
     address      = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
+    class Meta():
         db_table = 'users'
