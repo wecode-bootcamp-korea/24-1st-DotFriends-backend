@@ -361,3 +361,10 @@ zsdoc/data
 
 ## my_settings file
 my_settings.py
+
+category.csv
+data1.csv
+data2.csv
+product.csv
+db_uploader.py
+
