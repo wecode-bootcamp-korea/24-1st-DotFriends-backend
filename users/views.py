@@ -17,11 +17,14 @@ class SignUpView(View):
             email          = data['email']
             password       = data['password']
             address        = data['address']
-            nickname       = data['nickname']
+            name           = data['name']
             ck_password    = data['ck_password']
             phone_number   = data['phone_number']
             Valid_password = re.compile('^(?=.*[a-zA-Z])(?=.*[\d])(?=.*[~!@#$%^&*_+])[a-zA-Z\d~!@#$%^&*_+]{8,}$')
             Valid_email    = re.compile('^[a-zA-Z\d+-_.]+@[a-zA-Z\d]+\.[a-zA-Z\d+-.]+$')
+
+            if not (email and password and address and name and phone_number and ck_password):
+                return JsonResponse({'MESSAGE':'EMPTY_VALUE'}, status=400)
 
             if not Valid_email.match(email):
                 return JsonResponse({'MESSAGE':'EMAIL_VALIDATION'}, status=400)
@@ -38,14 +41,14 @@ class SignUpView(View):
             hashed_password  = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
             User.objects.create(
-                nickname     = nickname,
+                name         = name,
                 email        = email,
                 password     = hashed_password,
                 address      = address,
-                phone_number = phone_number,
-            )
+                phone_number = phone_number
+                )
 
-            return JsonResponse({'MESSAGE':'CREATE'}, satuts=201)
+            return JsonResponse({'MESSAGE':'CREATE'}, stauts=201)
         
         except KeyError:
             return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
