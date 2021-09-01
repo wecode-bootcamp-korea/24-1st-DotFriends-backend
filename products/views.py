@@ -5,12 +5,12 @@ from django.http      import JsonResponse
 from django.views     import View
 from django.db.models import Q
 
-from .models         import Product
+from .models          import Product
 
 class ProductOptionView(View):
     def get(self, request):
         option = request.GET.get('option', None)
-        offset = request.GET.get('offset', 0)
+        offset = request.GET.get('offset', 1)
         limit  = request.GET.get('limit', 12)
         order  = request.GET.get('order', None)
         order_option = {'random':"?", 'asc':"id", 'desc':"-id"}  
@@ -22,8 +22,8 @@ class ProductOptionView(View):
         if option != 'new' and option != 'sale':
             return JsonResponse({'MESSAGE': 'WRONG_ACCESS'}, status=400)
         
-        if not (re.match('^[0-9][0-9]*$', str(offset)) and re.match('^[0-9][0-9]*$', str(limit))):
-            offset, limit = 0, 12
+        if not (re.match('^[1-9][0-9]*$', str(offset)) and re.match('^[1-9][0-9]*$', str(limit))):
+            offset, limit = 1, 12
         offset, limit = int(offset), int(limit)
        
         q = Q()
@@ -34,8 +34,8 @@ class ProductOptionView(View):
             q = Q(~Q(discount_percent=0))    
         
         count = Product.objects.filter(q).order_by(order).count()
-        if count < (limit + offset): offset, limit = 0, 12
-        products = Product.objects.filter(q).order_by(order)[offset:limit+1]
+        if count < (offset + limit): offset, limit = 1, 12 
+        products = Product.objects.filter(q).order_by(order)[offset-1:offset-1+limit]
         
         results = [{
             'id'    : product.id,
@@ -44,4 +44,3 @@ class ProductOptionView(View):
         }for product in products]
 
         return JsonResponse({'results': results}, status=200)  
-
