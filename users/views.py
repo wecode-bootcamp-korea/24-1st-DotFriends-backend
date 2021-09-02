@@ -66,14 +66,17 @@ class SignInView(View):
             if not (email and password):
                 return JsonResponse({'MESSAGE':'EMPTY_VALUE'}, status=400)
                 
-            if User.objects.filter(email=email).exists():
-                user = User.objects.get(email=email)
-                
-                if bcrypt.checkpw(data['password'].encode('utf-8'), user.password.encode('utf-8')):
-                    token = jwt.encode({'id' : user.id}, settings.SECRET_KEY, algorithm='HS256')
-                    return JsonResponse({'MESSAGE':'SUCCESS', 'TOKEN' : token}, status=200)
+            if not User.objects.filter(email=email).exists():
+                return JsonResponse({'MESSAGE':'USER_DOES_NOT_EXIST'}, status=401)
             
-            return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
+            user = User.objects.get(email=email)
+                
+            if not bcrypt.checkpw(data['password'].encode('utf-8'), user.password.encode('utf-8')):
+                return JsonResponse({'MESSAGE':'INVALID_USER'}, status=401)
+
+            token = jwt.encode({'id' : user.id}, settings.SECRET_KEY, algorithm='HS256')
+            
+            return JsonResponse({'MESSAGE':'SUCCESS', 'TOKEN' : token}, status=200)
 
         except KeyError:
             return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
