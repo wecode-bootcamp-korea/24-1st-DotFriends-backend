@@ -4,9 +4,9 @@ from users.models    import User
 from products.models import Product
 
 class Order(models.Model):
-    user     = models.ForeignKey(User, on_delete=models.CASCADE)
-    status   = models.ForeignKey('OrderStatus', on_delete=models.SET_NULL, null=True)
-    datetime = models.DateTimeField(auto_now_add=True)
+    user       = models.ForeignKey(User, on_delete=models.CASCADE)
+    status     = models.ForeignKey('OrderStatus', on_delete=models.SET_NULL, null=True)
+    datetime   = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -26,10 +26,10 @@ class OrderItemStatus(models.Model):
         db_table = 'orderitemstatus'
 
 class OrderItem(models.Model):
-    order    = models.ForeignKey(Order, on_delete=models.CASCADE)
-    product  = models.ForeignKey(Product, on_delete=models.CASCADE)
-    status   = models.ForeignKey(OrderItemStatus, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
+    order      = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product    = models.ForeignKey(Product, on_delete=models.CASCADE)
+    status     = models.ForeignKey(OrderItemStatus, on_delete=models.CASCADE)
+    quantity   = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
