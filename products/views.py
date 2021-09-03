@@ -2,12 +2,11 @@ import re
 import json
 
 from django.http      import JsonResponse
-from django.http.response import HttpResponse
 from django.views     import View
 from django.db.models import Q
 
 from .models          import Product
-from .decorator       import input_validator  
+from .decorator       import input_validator
 
 class ProductsView(View):
     @input_validator
@@ -34,4 +33,3 @@ class ProductsView(View):
         }for product in products]
 
         return JsonResponse({'results': results}, status=200)  
-       
