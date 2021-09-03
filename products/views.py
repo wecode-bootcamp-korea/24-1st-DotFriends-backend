@@ -2,6 +2,7 @@ import json
 import re
 import base64
 
+<<<<<<< HEAD
 from urllib.parse import unquote
 from django.http  import JsonResponse
 from django.http.response import HttpResponse
@@ -10,9 +11,14 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count
 
 from products.models import Product, Category
+=======
+from django.http      import JsonResponse
+from django.views     import View
+from django.db.models import Q
+>>>>>>> master
 
 from .models          import Product
-from .decorator       import input_validator  
+from .decorator       import input_validator
 
 class ListView(View):
     def get(self, request):
@@ -81,4 +87,4 @@ class ProductsView(View):
             'images':[image.url for image in product.image_set.all()]
         }for product in products]
 
-        return JsonResponse({'results': results}, status=200) 
+        return JsonResponse({'results': results}, status=200)  
