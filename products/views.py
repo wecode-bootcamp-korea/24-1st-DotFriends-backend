@@ -24,8 +24,9 @@ class ProductsView(View):
         if search:
             q &= Q(name__icontains = search)
 
-        count = Product.objects.filter(q).count()
-        products = Product.objects.filter(q).prefetch_related('image_set').order_by(order)[offset:offset+limit]
+        product = Product.objects.filter(q).prefetch_related('image_set').order_by(order)
+        count = len(product)
+        products = product[offset:offset+limit]
         
         results = [{
             'id'    : product.id,
