@@ -17,25 +17,22 @@ from .decorator       import input_validator
 class ListView(View):
     def get(self, request):
         try:
-            url = request.path_info
-
             results = []
             products = []
 
             ordering            = request.GET.get('ordering')
 
-            page                = int(request.GET.get('page'))
+            offset              = int(request.GET.get('offset'))
             limit               = int(request.GET.get('limit'))
 
             encoded             = request.GET.get('encoded')
             decoded             = base64.b64decode(encoded).decode('utf-8')
-            category_name       = unquote(decoded)
-            category            = Category.objects.get(name=category_name)
+            request_category_id = unquote(decoded)
 
             if not (ordering=='popular' or ordering=='-updated_at' or ordering =='price' or ordering =='-price'):
-                return JsonResponse({'MESSAGE':'정렬기준 제대로 부탁합니당'}, status=400)
-            total_count = Product.objects.filter().count()
-            products = Product.objects.filter(category_id=category.id).annotate(popular=Count("userproductlike")).order_by(ordering)[offset:limit]
+                return JsonResponse({'MESSAGE':'INVALID ORDERING'}, status=400)
+            else :
+                products = Product.objects.filter(category_id=request_category_id).annotate(popular=Count("userproductlike")).order_by(ordering)
 
             total_page = round(len(products)/limit)
 
@@ -52,7 +49,6 @@ class ListView(View):
                     }
                 )
 
-            offset         = (page-1)*limit
             total_products = len(results)
             result_list    = results[offset:offset+limit]
 
