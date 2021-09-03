@@ -34,8 +34,8 @@ class ListView(View):
 
             if not (ordering=='popular' or ordering=='-updated_at' or ordering =='price' or ordering =='-price'):
                 return JsonResponse({'MESSAGE':'정렬기준 제대로 부탁합니당'}, status=400)
-            else :
-                products = Product.objects.filter(category_id=category.id).annotate(popular=Count("userproductlike")).order_by(ordering)
+            total_count = Product.objects.filter().count()
+            products = Product.objects.filter(category_id=category.id).annotate(popular=Count("userproductlike")).order_by(ordering)[offset:limit]
 
             total_page = round(len(products)/limit)
 
