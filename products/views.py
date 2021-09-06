@@ -24,9 +24,8 @@ class ProductsView(View):
         if search:
             q &= Q(name__icontains = search)
 
-        product = Product.objects.filter(q).prefetch_related('image_set').order_by(order)
-        count = len(product)
-        products = product[offset:offset+limit]
+        products = Product.objects.filter(q).prefetch_related('image_set').order_by(order)[offset:offset+limit]
+        total_count = Product.objects.filter(q).count()
         
         results = [{
             'id'    : product.id,
@@ -35,4 +34,4 @@ class ProductsView(View):
             'images':[image.url for image in product.image_set.all()]
         }for product in products]
 
-        return JsonResponse({'results': results, 'count': count}, status=200)  
+        return JsonResponse({'results': results, 'count': total_count}, status=200)  
