@@ -2,22 +2,15 @@ import json
 import re
 import base64
 
-<<<<<<< HEAD
 from urllib.parse import unquote
 from django.http  import JsonResponse
 from django.http.response import HttpResponse
-from django.views import View
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
-
-from products.models import Product, Category
-=======
 from django.http      import JsonResponse
 from django.views     import View
-from django.db.models import Q
->>>>>>> master
 
-from .models          import Product
+from products.models import Product, Category
 from .decorator       import input_validator
 
 class ListView(View):
@@ -37,8 +30,7 @@ class ListView(View):
 
             if not (ordering=='popular' or ordering=='-updated_at' or ordering =='price' or ordering =='-price'):
                 return JsonResponse({'MESSAGE':'INVALID ORDERING'}, status=400)
-            else :
-                products = Product.objects.filter(category_id=request_category_id).annotate(popular=Count("userproductlike")).order_by(ordering)
+            products = Product.objects.filter(category_id=request_category_id).annotate(popular=Count("userproductlike")).order_by(ordering)[offset:offset+limit]
 
             total_page = round(len(products)/limit)
 
@@ -56,9 +48,7 @@ class ListView(View):
                 )
 
             total_products = len(results)
-            result_list    = results[offset:offset+limit]
-
-            return JsonResponse({'MESSAGE':'SUCCESS', 'results':result_list, 'totalPage':total_page, 'totalProducts': total_products}, status=200)
+            return JsonResponse({'MESSAGE':'SUCCESS', 'results':results, 'totalPage':total_page, 'totalProducts': total_products}, status=200)
 
         except KeyError:
             return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
