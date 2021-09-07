@@ -4,13 +4,12 @@ import base64
 
 from urllib.parse import unquote
 from django.http  import JsonResponse
-from django.http.response import HttpResponse
-from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.http      import JsonResponse
 from django.views     import View
 
-from products.models import Product, Category
+from .models          import Product, Category
+from comments.models  import Comment
 from .decorator       import input_validator
 
 class ListView(View):
@@ -58,7 +57,7 @@ class ProductsView(View):
     def get(self, request):
         option = request.GET.get('option', None)
         offset = int(request.GET.get('offset', 0))
-        limit  = int(request.GET.get('limit', 0))
+        limit  = int(request.GET.get('limit', 10))
         order  = request.GET.get('order', 'id')
         search = request.GET.get('search', None)
     
@@ -83,3 +82,28 @@ class ProductsView(View):
         }for product in products]
 
         return JsonResponse({'results': results, 'count': total_count}, status=200)  
+
+class ProductDetailView(View):
+    def get(self, request, product_id):
+        
+        if not (Product.objects.filter(id=product_id).exists()):
+            return JsonResponse({'MESSAGE': 'NOT_FOUND'}, status=404)
+
+        product  = Product.objects.annotate(likes=Count("userproductlike")).get(id=product_id)
+        comments = Comment.objects.filter(product_id=product_id).select_related('user').prefetch_related('commentimage_set')
+        
+        results = {
+            'id'      :product.id,
+            'name'    :product.name,
+            'price'   :int(product.price),
+            'like'    : product.likes,
+            'images'  :[image.url for image in product.image_set.all()],
+            'reviews' :[{
+                "user_name" :comment.user.name,    
+                "rate"      : int(comment.rate),
+                "text"      : comment.text,
+                "created_at": comment.created_at.date(),
+                "images"    : [image.url for image in comment.commentimage_set.all()]
+            }for comment in comments]}
+                
+        return JsonResponse({'results': results}, status=200)

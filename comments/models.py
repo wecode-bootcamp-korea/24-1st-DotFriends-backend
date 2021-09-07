@@ -19,5 +19,3 @@ class CommentImage(models.Model):
 
     class Meta:
         db_table = 'commentimages'
-
-
