@@ -96,7 +96,6 @@ class ProductDetailView(View):
         if request.user:
             if UserProductLike.objects.filter(user_id=request.user.id,product_id=product_id).exists():
                 likes = 'Yes'
-        print(likes)
 
         results = {
             'id'      :product.id,
