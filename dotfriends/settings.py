@@ -9,12 +9,12 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-#import pymysql
+import pymysql
 
 from pathlib import Path
 from my_settings import DATABASES, SECRET_KEY
 
-#pymysql.install_as_MySQLdb()
+pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'orders',
     'users',
     'comments',
+    'carts'
 ]
 
 MIDDLEWARE = [
