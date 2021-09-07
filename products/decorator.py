@@ -1,5 +1,6 @@
 from products.models import Category
 from django.http.response import HttpResponse
+from django.conf import settings
 import jwt
 
 def input_validator(func):
@@ -22,7 +23,7 @@ def visitor_validator(func):
             if not access_token:
                 request.user = None
                 return func(self, request, *args, **kwargs)
-            token = jwt.decode(access_token, SECRET_KEY, algorithms='HS256')
+            token = jwt.decode(access_token, settings.SECRET_KEY, algorithms='HS256')
             user = User.objects.get(id=token['id'])
             request.user = user
         except User.DoesNotExist:
