@@ -36,8 +36,9 @@ class DescriptionImage(models.Model):
         db_table = 'descriptionimages'
 
 class UserProductLike(models.Model):
-    user    = models.ForeignKey(User,on_delete=models.CASCADE)
-    product = models.ForeignKey('product',on_delete=models.CASCADE)
+    user    = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'userproductlikes'
+        unique_together = (("user","product"),)
