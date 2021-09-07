@@ -8,9 +8,9 @@ from django.db.models import Q, Count
 from django.http      import JsonResponse
 from django.views     import View
 
-from .models          import Product, Category
+from .models          import Product, Category, UserProductLike
 from comments.models  import Comment
-from .decorator       import input_validator
+from .decorator       import input_validator, visitor_validator
 
 class ListView(View):
     def get(self, request):
@@ -82,21 +82,28 @@ class ProductsView(View):
         }for product in products]
 
         return JsonResponse({'results': results, 'count': total_count}, status=200)  
-
-class ProductDetailView(View):
-    def get(self, request, product_id):
         
+class ProductDetailView(View):
+    @visitor_validator
+    def get(self, request, product_id):
         if not (Product.objects.filter(id=product_id).exists()):
             return JsonResponse({'MESSAGE': 'NOT_FOUND'}, status=404)
 
         product  = Product.objects.annotate(likes=Count("userproductlike")).get(id=product_id)
         comments = Comment.objects.filter(product_id=product_id).select_related('user').prefetch_related('commentimage_set')
         
+        likes = None
+        if request.user:
+            if UserProductLike.objects.filter(user_id=request.user.id,product_id=product_id).exists():
+                likes = 'Yes'
+        print(likes)
+
         results = {
             'id'      :product.id,
             'name'    :product.name,
             'price'   :int(product.price),
             'like'    : product.likes,
+            'isLiked' : True if likes else False,
             'images'  :[image.url for image in product.image_set.all()],
             'reviews' :[{
                 "user_name" :comment.user.name,    
