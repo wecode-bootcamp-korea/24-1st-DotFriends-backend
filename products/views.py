@@ -4,84 +4,72 @@ import base64
 
 from urllib.parse import unquote
 from django.http  import JsonResponse
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Avg
 from django.http      import JsonResponse
 from django.views     import View
+from django.conf      import settings
 
-from .models          import Product, Category
+from .models          import Product, Category, User
 from comments.models  import Comment
-from .decorator       import input_validator
-
-class ListView(View):
-    def get(self, request):
-        try:
-            results = []
-            products = []
-
-            ordering            = request.GET.get('ordering')
-
-            offset              = int(request.GET.get('offset'))
-            limit               = int(request.GET.get('limit'))
-
-            encoded             = request.GET.get('encoded')
-            decoded             = base64.b64decode(encoded).decode('utf-8')
-            request_category_id = unquote(decoded)
-
-            if not (ordering=='popular' or ordering=='-updated_at' or ordering =='price' or ordering =='-price'):
-                return JsonResponse({'MESSAGE':'INVALID ORDERING'}, status=400)
-            products = Product.objects.filter(category_id=request_category_id).annotate(popular=Count("userproductlike")).order_by(ordering)[offset:offset+limit]
-
-            total_page = round(len(products)/limit)
-
-            for product in products:
-                price = int(product.price)
-                results.append(
-                    {
-                        'id'               : product.id,
-                        'name'             : product.name,
-                        'price'            : price,
-                        'image'            : product.image_set.values_list('url')[0][0],
-                        'updated_at'       : product.updated_at,
-                        'popular'          : product.popular
-                    }
-                )
-
-            total_products = len(results)
-            return JsonResponse({'MESSAGE':'SUCCESS', 'results':results, 'totalPage':total_page, 'totalProducts': total_products}, status=200)
-
-        except KeyError:
-            return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
+from .decorator       import input_validator, visitor_validator
 
 class ProductsView(View):
     @input_validator
+    @visitor_validator
     def get(self, request):
-        option = request.GET.get('option', None)
-        offset = int(request.GET.get('offset', 0))
-        limit  = int(request.GET.get('limit', 10))
-        order  = request.GET.get('order', 'id')
-        search = request.GET.get('search', None)
-    
+        option   = request.GET.get('option', None)
+        offset   = int(request.GET.get('offset', 0))
+        limit    = int(request.GET.get('limit', 10))
+        order    = request.GET.get('order', 'id')
+        search   = request.GET.get('search', None)
+        category = request.GET.get('category', 0)
+
+        categories = {1:'집콕KIT',2:'전자제품',3:'홈트레이닝'}
+        category_name = ''
+
         q = Q()
-        if option == 'new':
+        if option == 'new' or category == 'new':
             q = Q(is_new=True)
-        
-        if option == 'sale':
+            category_name = 'NEW'
+
+        if option == 'sale' or category == 'sale':
             q = Q(~Q(discount_percent=0))
+            category_name = 'SALE'
+
+        if (category != 'new' and category != 'sale') and category:
+            q &= Q(category_id=category)
+            category_name = categories[int(category)]
 
         if search:
             q &= Q(name__icontains = search)
+            category_name = search
 
-        products = Product.objects.filter(q).prefetch_related('image_set').order_by(order)[offset:offset+limit]
+        products = Product.objects.filter(q).prefetch_related('image_set')\
+            .annotate(avg_rate=Avg('comment__rate'),popular=Count("userproductlike", distinct=True),review_count=Count('comment',distinct=True))\
+            .order_by(order)[offset:offset+limit]
+
         total_count = Product.objects.filter(q).count()
-        
+
+        likes = None
+        if request.user:
+            likes = [i.id for i in Product.objects.filter(q).filter(userproductlike__user_id=request.user.id)[offset:offset+limit]]
+
         results = [{
-            'id'    : product.id,
-            'name'  : product.name,
-            'price' : int(product.price),
-            'images':[image.url for image in product.image_set.all()]
+            'id'               : product.id,
+            'name'             : product.name,
+            'price'            : int(product.price),
+            'updated_at'       : product.updated_at.date(),
+            'popular'          : product.popular,
+            'avg_rate'         : round(product.avg_rate, 2) if product.avg_rate else product.avg_rate,
+            'review_count'     : product.review_count,
+            'is_new'           : product.is_new,
+            'isLiked'          : True if likes and product.id in likes else False,
+            'discount_percent' : int(product.discount_percent),
+            'discounted_price' : int(product.price*(100-product.discount_percent)/100),
+            'image'            : [image.url for image in product.image_set.all()],
         }for product in products]
 
-        return JsonResponse({'results': results, 'count': total_count}, status=200)  
+        return JsonResponse({'results': results, 'count': total_count, 'category': category_name}, status=200)
 
 class ProductDetailView(View):
     def get(self, request, product_id):

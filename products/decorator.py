@@ -1,18 +1,28 @@
-from products.models import Category
-from django.http.response import HttpResponse
-from django.conf import settings
 import jwt
+
+from django.http.response import HttpResponse
+from django.http      import JsonResponse
+from django.conf import settings
+
+from .models import Category, User
 
 def input_validator(func):
     def wraper(self, request, *args, **kwargs):
         try:
-            offset = int(request.GET.get('offset', 0))
-            limit  = int(request.GET.get('limit', 0))
-            order  = request.GET.get('order', 'id')
-            if not (order == 'id' or order == '-id' or order == '?' ):
-                return HttpResponse(status=400) 
+            offset   = int(request.GET.get('offset', 1))
+            limit    = int(request.GET.get('limit', 12))
+            order    = request.GET.get('order', 'id')
+            category = request.GET.get('category', 0)
+
+            if (category != 'new' and category != 'sale') and category and not (Category.objects.filter(id=int(category)).exists()):
+                return HttpResponse(status=404)
+
+            if not (order == 'id' or order == '-id' or order == '?'\
+                or order=='-popular' or order=='-updated_at' or order =='price' or order =='-price'):
+                return HttpResponse(status=400)
+
         except ValueError:
-            return HttpResponse(status=400) 
+            return HttpResponse(status=400)
         return func(self, request, *args, **kwargs)
     return wraper
 
