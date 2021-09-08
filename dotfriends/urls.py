@@ -4,6 +4,7 @@ from products.views import ListView
 urlpatterns = [
     path('category', ListView.as_view()),
     path('product', include('products.urls')),
-    path('user', include('users.urls'))
+    path('user', include('users.urls')),
+    path('cart', include('carts.urls'))
 ]
 
