@@ -4,7 +4,7 @@ import base64
 
 from urllib.parse import unquote
 from django.http  import JsonResponse
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Avg
 from django.http      import JsonResponse
 from django.views     import View
 
@@ -86,24 +86,29 @@ class ProductsView(View):
 class ProductDetailView(View):
     @visitor_validator
     def get(self, request, product_id):
+        
         if not (Product.objects.filter(id=product_id).exists()):
             return JsonResponse({'MESSAGE': 'NOT_FOUND'}, status=404)
-
-        product  = Product.objects.annotate(likes=Count("userproductlike")).get(id=product_id)
-        comments = Comment.objects.filter(product_id=product_id).select_related('user').prefetch_related('commentimage_set')
         
+        product  = Product.objects.annotate(avg_rate=Avg('comment__rate'),likes=Count("userproductlike", distinct=True)\
+            ,comment_count=Count('comment',distinct=True)).get(id=product_id)
+        comments = Comment.objects.filter(product_id=product_id).select_related('user').prefetch_related('commentimage_set')
         likes = None
         if request.user:
             if UserProductLike.objects.filter(user_id=request.user.id,product_id=product_id).exists():
                 likes = 'Yes'
-
+                
+        
         results = {
-            'id'      :product.id,
-            'name'    :product.name,
-            'price'   :int(product.price),
-            'like'    : product.likes,
-            'isLiked' : True if likes else False,
-            'images'  :[image.url for image in product.image_set.all()],
+            'id'           :product.id,
+            'name'         :product.name,
+            'price'        :int(product.price),
+            'likes'        : product.likes,
+            'is_new'       : product.is_new,
+            'isLiked'      : True if likes else False,
+            'comment_avg_rate' : round(product.avg_rate,1),
+            'comment_count':product.comment_count,
+            'images'       :[image.url for image in product.image_set.all()],
             'reviews' :[{
                 "user_name" :comment.user.name,    
                 "rate"      : int(comment.rate),
