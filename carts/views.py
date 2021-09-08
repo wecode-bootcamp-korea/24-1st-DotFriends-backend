@@ -2,9 +2,11 @@ import json
 
 from django.http.response import JsonResponse
 from django.views         import View
+from django.db.models import Q
 
 from .models          import Cart
 from products.models  import Product
+from users.models     import User
 from users.decorators import login_decorator
 
 class CartView(View):
@@ -45,3 +47,41 @@ class CartView(View):
         }for cart in carts]
 
         return JsonResponse({'result':result}, status = 201)
+
+    @login_decorator
+    def delete(self, request):
+        try:
+            data = json.loads(request.body)
+
+            products = data['product_id']
+
+            q = Q()
+
+            for request_product_id in products:
+                q |= Q(product_id = request_product_id)
+            q &= Q(user_id = request.user.id)
+            
+            Cart.objects.filter(q).delete()
+
+            return JsonResponse({'MESSAGE':'SUCCESS'}, status=201)
+
+        except KeyError:
+            return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
+
+    @login_decorator
+    def patch(self, request):
+        try:
+            data = json.loads(request.body)
+
+            cart = Cart.objects.get(user_id=request.user.id, product_id=data['productId'])
+
+            cart.quantity = data['quantity']
+            cart.save()
+
+            return JsonResponse({'MESSAGE':'SUCCESS'}, status=201)
+
+        except KeyError:
+            return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
+        
+        except Cart.DoesNotExist:
+            return JsonResponse({'MESSAGE':'INVALID_CART_ITEM'}, status=400)
