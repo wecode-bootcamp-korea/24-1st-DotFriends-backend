@@ -1,10 +1,10 @@
 import jwt
-from products.models import Category
+
 from django.http.response import HttpResponse
 from django.http      import JsonResponse
 from django.conf import settings
 
-from users.models import User
+from .models import Category, User
 
 def input_validator(func):
     def wraper(self, request, *args, **kwargs):
@@ -20,9 +20,8 @@ def input_validator(func):
             if not (order == 'id' or order == '-id' or order == '?'\
                 or order=='-popular' or order=='-updated_at' or order =='price' or order =='-price'):
                 return HttpResponse(status=400) 
-
         except ValueError:
-            return HttpResponse(status=400) 
+            return HttpResponse(status=400)
         return func(self, request, *args, **kwargs)
     return wraper
 
