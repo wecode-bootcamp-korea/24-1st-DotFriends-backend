@@ -9,9 +9,10 @@ from django.http      import JsonResponse
 from django.views     import View
 from django.conf      import settings
 
-from .models          import Product, Category, User
+from .models          import Product, Category, User, UserProductLike
 from comments.models  import Comment
 from .decorator       import input_validator, visitor_validator
+from users.decorators import login_decorator
 
 class ProductsView(View):
     @input_validator
@@ -24,9 +25,9 @@ class ProductsView(View):
         search   = request.GET.get('search', None)
         category = request.GET.get('category', 0)
 
-        categories = {1:'집콕KIT',2:'전자제품',3:'홈트레이닝'}
-        category_name = ''
-
+        categories = {"1":'집콕KIT',"2":'전자제품',"3":'홈트레이닝', "new":"NEW", "sale":"SALE"}
+        category_name = search if search else categories.get(category,'')
+        
         q = Q()
         if option == 'new' or category == 'new':
             q = Q(is_new=True)
@@ -52,7 +53,7 @@ class ProductsView(View):
 
         likes = None
         if request.user:
-            likes = [i.id for i in Product.objects.filter(q).filter(userproductlike__user_id=request.user.id)[offset:offset+limit]]
+            likes = [i.id for i in Product.objects.filter(q).filter(userproductlike__user_id=request.user)[offset:offset+limit]]
 
         results = [{
             'id'               : product.id,
@@ -95,3 +96,23 @@ class ProductDetailView(View):
             }for comment in comments]}
                 
         return JsonResponse({'results': results}, status=200)
+
+class UserProductLikesView(View):
+    @login_decorator
+    def post(self, request):
+        try:
+
+            data = json.loads(request.body)
+
+            if not data['isLiked'] :
+                UserProductLike.objects.create(user_id = request.user, product_id = data['productId'])
+                return JsonResponse({'MESSAGE':'CREATED'}, status=201)
+            UserProductLike.objects.get(user_id = request.user, product_id = data['productId']).delete()
+            return JsonResponse({'MESSAGE':'CREATED'}, status=201)
+        
+        except KeyError:
+            return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
+        
+        except jwt.DecodeError:
+            return JsonResponse({'MESSAGE':'INVALID_AUTHORIZATION'}, status=403)
+
