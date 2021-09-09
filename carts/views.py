@@ -54,9 +54,6 @@ class CartListView(View):
             parts = urlparse(request.get_full_path())
             product_ids = parse_qs(parts.query)['product_id']
 
-            for idx,product_id in enumerate(product_ids):
-                product_ids[idx] = int(product_id)
-
             Cart.objects.filter(user_id=request.user.id, product_id__in = product_ids).delete()
 
             return JsonResponse({'MESSAGE':'NO_CONTENT'}, status=204)
@@ -81,3 +78,4 @@ class CartListView(View):
         
         except Cart.DoesNotExist:
             return JsonResponse({'MESSAGE':'INVALID_CART_ITEM'}, status=400)
+
