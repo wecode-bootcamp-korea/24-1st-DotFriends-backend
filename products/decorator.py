@@ -42,3 +42,4 @@ def visitor_validator(func):
             return JsonResponse({'MESSAGE':'INVALID_TOKEN'},status=401)
         return func(self, request, *args, **kwargs)
     return wraper
+
