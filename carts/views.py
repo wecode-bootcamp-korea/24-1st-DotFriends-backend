@@ -9,7 +9,7 @@ from products.models  import Product
 from users.models     import User
 from users.decorators import login_decorator
 
-class CartView(View):
+class CartListView(View):
     @login_decorator
     def post(self, request):
         try:
