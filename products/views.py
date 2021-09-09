@@ -4,7 +4,7 @@ import base64
 
 from urllib.parse import unquote
 from django.http  import JsonResponse
-from django.db.models import Q, Count, Avg
+from django.db.models import Q, Count, Avg, Case, When
 from django.http      import JsonResponse
 from django.views     import View
 from django.conf      import settings
@@ -73,26 +73,35 @@ class ProductsView(View):
         return JsonResponse({'results': results, 'count': total_count, 'category': category_name}, status=200)
 
 class ProductDetailView(View):
+    @visitor_validator
     def get(self, request, product_id):
         
         if not (Product.objects.filter(id=product_id).exists()):
             return JsonResponse({'MESSAGE': 'NOT_FOUND'}, status=404)
-
-        product  = Product.objects.annotate(likes=Count("userproductlike")).get(id=product_id)
-        comments = Comment.objects.filter(product_id=product_id).select_related('user').prefetch_related('commentimage_set')
         
+        product  = Product.objects.annotate(avg_rate=Avg('comment__rate'),likes=Count("userproductlike", distinct=True)\
+            ,comment_count=Count('comment',distinct=True)\
+                ,is_liked=Count(Case(When(Q(userproductlike__user__id=request.user)&Q(userproductlike__product__id=product_id),then=0)),distinct=True)).get(id=product_id)
+        comments = Comment.objects.filter(product_id=product_id).select_related('user').prefetch_related('commentimage_set')
+                
         results = {
-            'id'      :product.id,
-            'name'    :product.name,
-            'price'   :int(product.price),
-            'like'    : product.likes,
-            'images'  :[image.url for image in product.image_set.all()],
+            'id'               : product.id,
+            'name'             : product.name,
+            'price'            : int(product.price),
+            'discount_percent' : int(product.discount_percent),
+            'discounted_price' : int(product.price*(100-product.discount_percent)/100),
+            'likes'            : product.likes,
+            'is_new'           : product.is_new,
+            'isLiked'          : product.is_liked,
+            'comment_avg_rate' : round(product.avg_rate,1),
+            'comment_count'    : product.comment_count,
+            'images'           : [image.url for image in product.image_set.all()],
             'reviews' :[{
-                "user_name" :comment.user.name,    
-                "rate"      : int(comment.rate),
-                "text"      : comment.text,
-                "created_at": comment.created_at.date(),
-                "images"    : [image.url for image in comment.commentimage_set.all()]
+                "user_name"  : comment.user.name,    
+                "rate"       : int(comment.rate),
+                "text"       : comment.text,
+                "created_at" : comment.created_at.date(),
+                "images"     : [image.url for image in comment.commentimage_set.all()]
             }for comment in comments]}
                 
         return JsonResponse({'results': results}, status=200)
@@ -105,9 +114,9 @@ class UserProductLikesView(View):
             data = json.loads(request.body)
 
             if not data['isLiked'] :
-                UserProductLike.objects.create(user_id = request.user, product_id = data['productId'])
+                UserProductLike.objects.create(user_id = request.user.id, product_id = data['productId'])
                 return JsonResponse({'MESSAGE':'CREATED'}, status=201)
-            UserProductLike.objects.get(user_id = request.user, product_id = data['productId']).delete()
+            UserProductLike.objects.get(user_id = request.user.id, product_id = data['productId']).delete()
             return JsonResponse({'MESSAGE':'CREATED'}, status=201)
         
         except KeyError:
@@ -115,4 +124,3 @@ class UserProductLikesView(View):
         
         except jwt.DecodeError:
             return JsonResponse({'MESSAGE':'INVALID_AUTHORIZATION'}, status=403)
-
