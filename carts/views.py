@@ -51,19 +51,15 @@ class CartView(View):
     @login_decorator
     def delete(self, request):
         try:
-            data = json.loads(request.body)
+            parts = urlparse(request.get_full_path())
+            product_ids = parse_qs(parts.query)['product_id']
 
-            products = data['product_id']
+            for idx,product_id in enumerate(product_ids):
+                product_ids[idx] = int(product_id)
 
-            q = Q()
+            Cart.objects.filter(user_id=request.user.id, product_id__in = product_ids).delete()
 
-            for request_product_id in products:
-                q |= Q(product_id = request_product_id)
-            q &= Q(user_id = request.user.id)
-            
-            Cart.objects.filter(q).delete()
-
-            return JsonResponse({'MESSAGE':'SUCCESS'}, status=201)
+            return JsonResponse({'MESSAGE':'NO_CONTENT'}, status=204)
 
         except KeyError:
             return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
@@ -78,7 +74,7 @@ class CartView(View):
             cart.quantity = data['quantity']
             cart.save()
 
-            return JsonResponse({'MESSAGE':'SUCCESS'}, status=201)
+            return JsonResponse({'MESSAGE':'NO_CONTENT'}, status=204)
 
         except KeyError:
             return JsonResponse({'MESSAGE':'KEY_ERROR'}, status=400)
