@@ -9,8 +9,8 @@ class Product(models.Model):
     is_new           = models.BooleanField(default=False)
     category         = models.ForeignKey('category', on_delete=models.SET_NULL,null=True)
     like             = models.ManyToManyField(User,through='Userproductlike',related_name='products')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at       = models.DateTimeField(auto_now_add=True)
+    updated_at       = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'products'
