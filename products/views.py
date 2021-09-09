@@ -4,7 +4,7 @@ import base64
 
 from urllib.parse import unquote
 from django.http  import JsonResponse
-from django.db.models import Q, Count, Avg
+from django.db.models import Q, Count, Avg, Case, When
 from django.http      import JsonResponse
 from django.views     import View
 
@@ -91,21 +91,17 @@ class ProductDetailView(View):
             return JsonResponse({'MESSAGE': 'NOT_FOUND'}, status=404)
         
         product  = Product.objects.annotate(avg_rate=Avg('comment__rate'),likes=Count("userproductlike", distinct=True)\
-            ,comment_count=Count('comment',distinct=True)).get(id=product_id)
+            ,comment_count=Count('comment',distinct=True)\
+                ,is_liked=Count(Case(When(Q(userproductlike__user__id=request.user)&Q(userproductlike__product__id=product_id),then=0)),distinct=True)).get(id=product_id)
         comments = Comment.objects.filter(product_id=product_id).select_related('user').prefetch_related('commentimage_set')
-        likes = None
-        if request.user:
-            if UserProductLike.objects.filter(user_id=request.user.id,product_id=product_id).exists():
-                likes = 'Yes'
                 
-        
         results = {
             'id'           :product.id,
             'name'         :product.name,
             'price'        :int(product.price),
             'likes'        : product.likes,
             'is_new'       : product.is_new,
-            'isLiked'      : True if likes else False,
+            'isLiked'      : product.is_liked,
             'comment_avg_rate' : round(product.avg_rate,1),
             'comment_count':product.comment_count,
             'images'       :[image.url for image in product.image_set.all()],

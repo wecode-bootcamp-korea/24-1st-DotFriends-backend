@@ -35,7 +35,7 @@ def visitor_validator(func):
                 return func(self, request, *args, **kwargs)
             token = jwt.decode(access_token, settings.SECRET_KEY, algorithms='HS256')
             user = User.objects.get(id=token['id'])
-            request.user = user
+            request.user = user.id
         except User.DoesNotExist:
             return JsonResponse({'MESSAGE':'INVALID_USER'},status=401)
         except jwt.exceptions.DecodeError:
