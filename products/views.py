@@ -1,6 +1,7 @@
 import json
 import re
 import base64
+import jwt
 
 from urllib.parse import unquote
 from django.http  import JsonResponse
@@ -39,7 +40,7 @@ class ProductsView(View):
 
         if (category != 'new' and category != 'sale') and category:
             q &= Q(category_id=category)
-            category_name = categories[int(category)]
+            category_name = categories[category]
 
         if search:
             q &= Q(name__icontains = search)
