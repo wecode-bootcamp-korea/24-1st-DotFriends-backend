@@ -31,7 +31,13 @@
 
 ## **🎬 시연 영상**
 * [시연 영상 보러 가기](https://youtu.be/T5bOgE7dzwk)
+
+
+## **✈️ 사이트**
+* [사이트 보러 가기](http://18.224.25.47:3000/)
 ---
+
+
 ## 🛠 **테크 스택**
 
 ### **Frontend**
@@ -68,116 +74,13 @@
 - 장바구니 생성 및 조회 API
 
 ### **Brown 김동준**
-- 
-- 
+- 상품 리스트 조회 API
+- 찜하기 API
+- 장바구니 수정 및 삭제 API
 ---
 
-
-
-## **API 문서**
-
-### 4.1. 사용자
-#### 4.1.1 회원가입
-##### url
-```{base_url}/user/sign-up```
-##### method
-```POST```
-##### body
-email : ```이메일``` ```string```
-password : ```비밀번호``` ```string```
-address : ```주소``` ```string```
-name : ```이름``` ```string```
-check_password : ```비밀번호 확인``` ```string```
-phone_number : ```휴대폰 번호``` ```string```
-
----
-#### 4.1.2 로그인
-##### url
-```{base_url}/user/sign-in```
-##### method
-```POST```
-##### headers
-Authorization : ```토큰``` ```token```
-##### body
-email : ```이메일``` ```string```
-password : ```패스워드``` ```string```
-
-
-
-
-### 4.2. 상품
-#### 4.2.1. 상품 리스트 조회
-##### url
-```{base_url}/product```
-##### method 
-```GET```
-##### query parameters
-option: ```옵션``` ```‘new’```, ```‘sale’```
-order: ```정렬기준``` ```‘-id‘```, ```‘-popular‘```, ```‘-created_at‘```, ```‘-updated_at‘```
-search: ```검색값``` ```string``` 
-offset: ```조회 시작점``` ```int```
-limit: ```조회 상품 개수``` ```int``` 
-category: ```카테고리``` ```1,2,3,'new','sale'```
-
----
-#### 4.2.2. 상품 상세 조회
-##### url
-```{base_url}/product/<int:product_id>```
-##### method
-```GET```
-
----
-#### 4.2.3. 찜하기
-##### url
-```{base_url}/mainproduct/likes```
-##### method
-```POST```
-##### headers
-Authorization : ```토큰``` ```token```
-##### body
-isLiked : ```찜하기 여부``` ```True```,```False```
-
-
-### 4.3. 장바구니
-#### 4.3.1. 생성
-##### url
-```{base_url}/cart```
-##### method
-```POST```
-##### headers
-Authorization : ```토큰``` ```token```
-##### body
-product_id : ```상품 ID``` ```string```
-quantity : ```상품 수량``` ```int```
-
----
-#### 4.3.2. 조회
-##### url
-```{base_url}/cart```
-##### method
-```GET```
-##### headers
-Authorization : ```토큰``` ```token```
-
----
-#### 4.3.3 수정
-##### url
-```{base_url}/cart/<int:product_id>```
-##### method
-```PATCH```
-##### headers
-Authorization : ```토큰``` ```token```
-##### body
-quantity : ```수량``` ```int```
-
----
-#### 4.3.4 삭제
-##### url
-```{base_url}/cart?product_id=int...&product_id=int```
-##### method
-```DELETE```
-##### headers
-Authorization : ```토큰``` ```token```
+## **🌍 API 문서**
+* [API 문서 보러 가기](https://documenter.getpostman.com/view/9533399/UUxxgo81)
 
 ---
 ## Reference
